@@ -8,7 +8,7 @@ Summary(pl):	Biblioteka wspólnego kodu UCL
 Name:		ucl-common
 %define	basever	1.2.14
 Version:	1.2.16
-Release:	3
+Release:	4
 License:	custom
 Group:		Libraries
 Source0:	http://www-mice.cs.ucl.ac.uk/multimedia/software/common/common-%{basever}.tar.gz
@@ -84,6 +84,8 @@ rm -rf $RPM_BUILD_ROOT
 
 %{__make} -C src install \
 	DESTDIR=$RPM_BUILD_ROOT
+install src/{config_unix,config_win32,uclconf}.h \
+	$RPM_BUILD_ROOT%{_includedir}
 
 rm -rf doc/html/CVS
 

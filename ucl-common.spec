@@ -1,18 +1,17 @@
 
-# OBSOLETED by rat.spec, but may be needed again
-# at the moment rat contains more recent ucl-common (1.2.13),
-# and there is no separate source of version > 1.2.8
+# NOTE that rat.spec also contains ucl-common - sometimes older,
+# sometimes newet than this spec
 
 Summary:	UCL Common Code Library
 Summary(pl):	Biblioteka wspólnego kodu UCL
 Name:		ucl-common
-Version:	1.2.8
+Version:	1.2.14
 Release:	1
 License:	custom
 Group:		Libraries
 Source0:	http://www-mice.cs.ucl.ac.uk/multimedia/software/common/common-%{version}.tar.gz
-Patch0:		%{name}-gcc3.patch
-Patch1:		%{name}-shared.patch
+Patch0:		%{name}-shared.patch
+Patch1:		%{name}-acfix.patch
 URL:		http://www-mice.cs.ucl.ac.uk/multimedia/software/
 BuildRequires:	autoconf
 BuildRequires:	automake
@@ -59,7 +58,7 @@ UCL Common Code static library.
 Statyczna biblioteka wspólnego kodu UCL.
 
 %prep
-%setup -qn common
+%setup -qn common-%{version}
 %patch0 -p1
 %patch1 -p1
 

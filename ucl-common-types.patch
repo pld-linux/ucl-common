@@ -26,8 +26,8 @@
  #endif
 -#endif /* HAVE_INET_NTOP */
 +#endif /* NEED_INET_NTOP */
---- rat-4.2.25/common/src/inet_ntop.c.orig	1999-12-02 16:07:31.000000000 +0000
-+++ rat-4.2.25/common/src/inet_ntop.c	2004-04-12 23:03:06.000000000 +0000
+--- common-1.2.14/src/inet_ntop.c.orig	1999-12-02 16:07:31.000000000 +0000
++++ common-1.2.14/src/inet_ntop.c	2004-04-12 23:03:06.000000000 +0000
 @@ -16,7 +16,7 @@
   * SOFTWARE.
   */

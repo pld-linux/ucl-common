@@ -41,7 +41,7 @@ Development part of UCL Common Code Library.
 %patch0 -p1
 
 %build
-%configure \
+%configure2_13 \
 	--enable-ipv6
 %{__make}
 

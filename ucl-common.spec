@@ -1,3 +1,6 @@
+
+# OBSOLETED by rat.spec, but may be needed again
+
 Summary:	UCL Common Code Library
 Name:		ucl-common
 Version:	1.2.0

@@ -1,6 +1,7 @@
 
 # OBSOLETED by rat.spec, but may be needed again
-# or maybe better use this version (shared library) in rat.spec?
+# at the moment rat contains more recent ucl-common (1.2.13),
+# and there is no separate source of version > 1.2.8
 
 Summary:	UCL Common Code Library
 Summary(pl):	Biblioteka wspólnego kodu UCL

@@ -1,0 +1,1951 @@
+diff -Nur common-1.2.14/examples/sap/Makefile.in common-1.2.16/examples/sap/Makefile.in
+--- common-1.2.14/examples/sap/Makefile.in	1970-01-01 01:00:00.000000000 +0100
++++ common-1.2.16/examples/sap/Makefile.in	2003-05-28 13:03:33.000000000 +0200
+@@ -0,0 +1,36 @@
++#
++# Makefile for the SAP example.
++# This probably requires GNU make.
++#
++
++# Location of includes and library
++CSRC   = ../../src
++
++# Library name
++LNAME  = uclmmbase
++
++DEFS   = @DEFS@
++CFLAGS = @CFLAGS@ $(DEFS) -I$(CSRC)
++LIBS   = @LIBS@ -L$(CSRC) -l$(LNAME)
++CC     = @CC@
++
++TARGET = sapdemo
++OBJS   = sapdemo.o
++SRCS   = $(OBJS:%.o=%.c)
++
++all: $(TARGET)
++
++sapdemo: $(OBJS) $(CSRC)/lib$(LNAME).a
++	 $(CC) $(CFLAGS) -o $@ $(OBJS) $(LIBS)
++
++.c.o:
++	$(CC) $(CFLAGS) $(INC) -c $<
++
++$(CSRC)/lib$(LNAME).a:
++	cd $(CSRC) && $(MAKE)
++
++clean:
++	-rm -f $(OBJS) $(TARGET)
++
++distclean: clean
++	-rm -f Makefile
+\ Brak znaku nowej linii na koñcu pliku
+diff -Nur common-1.2.14/examples/sap/sapdemo.c common-1.2.16/examples/sap/sapdemo.c
+--- common-1.2.14/examples/sap/sapdemo.c	1970-01-01 01:00:00.000000000 +0100
++++ common-1.2.16/examples/sap/sapdemo.c	2003-05-28 13:03:33.000000000 +0200
+@@ -0,0 +1,41 @@
++#include <sys/time.h>
++
++#include <ctype.h>
++#include <inttypes.h>
++#include <stdio.h>
++#include <stdlib.h>
++#include <string.h>
++#include <unistd.h>
++
++#include "uclconf.h"
++#include "config_unix.h"
++#include "config_win32.h"
++#include "debug.h"
++#include "memory.h"
++#include "sap.h"
++
++static void
++sap_handler(sap_packet *packet)
++{
++  print_sap_packet(packet);
++}
++
++
++int
++main()
++{
++  struct sap *session = NULL;
++  struct timeval timeout;
++
++  session = sap_init("224.2.127.254", 9875, 127, sap_handler);
++
++  timeout.tv_sec = 0;
++  timeout.tv_usec = 0;
++
++  while(1) 
++    sap_recv(session, &timeout);
++
++  sap_done(session);
++
++  return 0;
++}
+diff -Nur common-1.2.14/examples/sdp/Makefile.in common-1.2.16/examples/sdp/Makefile.in
+--- common-1.2.14/examples/sdp/Makefile.in	1970-01-01 01:00:00.000000000 +0100
++++ common-1.2.16/examples/sdp/Makefile.in	2003-05-28 13:10:07.000000000 +0200
+@@ -0,0 +1,36 @@
++#
++# Makefile for the SDP example.
++# This probably requires GNU make.
++#
++
++# Location of includes and library
++CSRC   = ../../src
++
++# Library name
++LNAME  = uclmmbase
++
++DEFS   = @DEFS@
++CFLAGS = @CFLAGS@ $(DEFS) -I$(CSRC)
++LIBS   = @LIBS@ -L$(CSRC) -l$(LNAME)
++CC     = @CC@
++
++TARGET = sdpdemo
++OBJS   = sdpdemo.o
++SRCS   = $(OBJS:%.o=%.c)
++
++all: $(TARGET)
++
++sdpdemo: $(OBJS) $(CSRC)/lib$(LNAME).a
++	 $(CC) $(CFLAGS) -o $@ $(@).o $(LIBS)
++
++.c.o:
++	$(CC) $(CFLAGS) $(INC) -c $<
++
++$(CSRC)/lib$(LNAME).a:
++	cd $(CSRC) && $(MAKE)
++
++clean:
++	-rm -f $(OBJS) $(TARGET)
++
++distclean: clean
++	-rm -f Makefile
+diff -Nur common-1.2.14/examples/sdp/sdpdemo.c common-1.2.16/examples/sdp/sdpdemo.c
+--- common-1.2.14/examples/sdp/sdpdemo.c	1970-01-01 01:00:00.000000000 +0100
++++ common-1.2.16/examples/sdp/sdpdemo.c	2003-05-28 13:10:07.000000000 +0200
+@@ -0,0 +1,69 @@
++/*
++ * sdpdemo: A simple sdp application that recieves SAP/SDP data.
++ *
++ * (c) 2002 Argonne National Laboratory/University of Chicago
++ */
++
++#include <sys/time.h>
++
++#include <ctype.h>
++#include <inttypes.h>
++#include <stdio.h>
++#include <stdlib.h>
++#include <string.h>
++#include <unistd.h>
++
++#include "uclconf.h"
++#include "config_unix.h"
++#include "config_win32.h"
++#include "debug.h"
++#include "memory.h"
++#include "sap.h"
++#include "sdp.h"
++
++static void
++sap_handler(sap_packet *packet)
++{
++  sdp *session = NULL;
++  char *new_payload = NULL;
++
++  print_sap_packet(packet); 
++
++  session = sdp_parse(packet->payload);
++
++  printf("Original Packet: \n++++\n%s++++\n", session->original);
++
++  sdp_print(session);
++
++  new_payload = sdp_make(session);
++
++  if(strcmp(packet->payload, new_payload) != 0)
++    printf("The two sdp payloads are different!\n");
++
++  xfree(new_payload);
++
++  sdp_free(session);
++
++  /* This is causing a seg fault, and a memory leak */
++  /*  xfree(packet); */
++}
++
++
++int
++main()
++{
++  struct sap *session = NULL;
++  struct timeval timeout;
++
++  session = sap_init("224.2.127.254", 9875, 127, sap_handler);
++
++  timeout.tv_sec = 0;
++  timeout.tv_usec = 0;
++
++  while(1) 
++    sap_recv(session, &timeout);
++
++  sap_done(session);
++
++  return 0;
++}
+diff -Nur common-1.2.14/MODS common-1.2.16/MODS
+--- common-1.2.14/MODS	2003-04-01 16:50:58.000000000 +0200
++++ common-1.2.16/MODS	2004-01-12 18:25:12.000000000 +0100
+@@ -19,12 +19,12 @@
+ 	  conditions when multiple tools for a single conference were
+ 	  started either side of the expiry time.
+ 	- Update mbus addressing scheme - names are now sets of tokens, if the
+-	  set of tokens in the destination address is a subset of the address 
++	  set of tokens in the destination address is a subset of the address
+ 	  of the entity receiving that message then the message is accepted. An
+ 	  empty set is a valid destination address for a message, and that will
+ 	  be accepted by all receivers (ie: a wildcard).
+ 	- Remove channel ID from mbus code.
+-	- Fix configure script to work with solaris 2.7 where inet_aton() and 
++	- Fix configure script to work with solaris 2.7 where inet_aton() and
+ 	  inet_pton() have prototypes but no implementation.
+ 	* 31 March 1999 [rat v4.0.0]
+ 
+@@ -37,7 +37,7 @@
+ 	- Add support for DES encryption to the mbus (on by default)
+ 	- Fix DES code
+ 	- Mbus keeps a cache of other entities, and only allows sending of
+-	  reliable messages to known unicast addresses. 
++	  reliable messages to known unicast addresses.
+ 	- Mbus error function now takes a "type of error" argument
+ 	- Added xrealloc()
+ 	- Fix reordering of mbus messages
+@@ -48,7 +48,7 @@
+ 
+ v1.0.4  - Fix compilation with Microsoft IPv6 stack
+ 	- Solaris 2.5.1 doesn't have vsnprintf(), use vsprintf() instead
+-	  and don't worry about the possible buffer overflow problems. 
++	  and don't worry about the possible buffer overflow problems.
+ 	  Reported by Holger Wirtz.
+ 	- Added mbus_addr_valid()
+ 	- Added timeout to mbus_recv()
+@@ -58,7 +58,7 @@
+ v1.0.5  - Not quite sure what happened with this version, but if you have
+ 	  it it's probably not a good idea to use it! :-)
+ 
+-v1.0.6  - Add ability to send to one port whilst receiving on another, 
++v1.0.6  - Add ability to send to one port whilst receiving on another,
+ 	  requested by Henning Schulzrinne.
+ 	- Add mbus_cmd_handler() to change the function handling the
+ 	  reception of mbus commands.
+@@ -70,12 +70,12 @@
+ 	- Fix memory leak in mbus_recv()
+ 	- Fixes for configure script on 64 bit IRIX from Peter Orbaek
+ 	- Move base64 tests into test_base64.c and integrate with the test suite
+-	* Released 5 July 1999 
++	* Released 5 July 1999
+ 
+ v1.0.7  - Add udp_exit to close sockets and leave multicast groups if necessary.
+ 	- Fix mbus_exit close sockets.
+ 	- Move the code to deal with the mbus configuration into mbus_config.c
+-	  which will make it easier to write an mbus packet logger without code 
++	  which will make it easier to write an mbus packet logger without code
+ 	  duplication (such a logger can't easily be part of mbus.c, since it's
+ 	  needs conflict with correct protocol operation).
+ 	- Note that v1.3 of the Microsoft Research IPv6 stack requires an explicit
+@@ -113,7 +113,7 @@
+ 	  reception report (ie: no report blocks) has been received.
+ 	- Add RX_RTCP_START and RX_RTCP_FINISH events to the RTP code.
+ 	- debug_msg() now displays the pid
+-	- The mbus code now maintains the list of active sources more correctly, 
++	- The mbus code now maintains the list of active sources more correctly,
+ 	  making mbus_addr_valid() useful
+ 	- rtp_init() now takes separate rx_port and tx_port, instead of a
+ 	  single port for both sending and receiving.
+@@ -126,7 +126,7 @@
+ 	  avoid burning too many cycles.
+ 	- Mbus updates contributed by Markus Germeier
+ 		- we now can configure the multicast address and port which the
+-		  mbus should use in ~/.mbus 
++		  mbus should use in ~/.mbus
+ 		- honor the SCOPE setting in ~/.mbus
+ 		- expire sources we haven't heard from for a while
+ 		- fixes small memory leak in remove_other_addr
+@@ -171,7 +171,7 @@
+ 	- Update RTCP reporting interval calculation
+ 	- Implement reverse reconsideration of RTCP reporting interval
+ 	- Fix tv_diff in rtp.c to handle negative results
+-	- Remove rtp_get_encryption_key(), the user of the library is assumed to 
++	- Remove rtp_get_encryption_key(), the user of the library is assumed to
+ 	  remember the passphrase used and doesn't need access to the internal
+ 	  form of the key.
+ 	- GNU autoconf modifications from Bill Fenner
+@@ -191,12 +191,12 @@
+ 	* 13 December 1999 [rat v4.1.2]
+ 
+ v1.1.0  - Changed autoconf generated header to uclconf.h.
+-	- Changed library name to uclmmbase to be consistent with other libs.   
++	- Changed library name to uclmmbase to be consistent with other libs.
+ 	- Add RTP_OPT_FILTER_MY_PACKETS
+ 	- Cleanup test routines
+ 	- Fix various potential buffer overflow problems
+ 	- Update copyright notices to welcome in the new millennium
+-	- Previous versions of udp_send() would sometimes return -1 on error, 
++	- Previous versions of udp_send() would sometimes return -1 on error,
+ 	  and would sometimes abort(). We now always return -1 and never abort.
+ 	- Add test routines for code in net_udp.c
+ 	- Fix SCOPE parameter in mbus configuration on windows
+@@ -209,11 +209,11 @@
+ 	  days wasted.
+ 	- Fix buffer overflow in _dprintf() on Windows, using _vsnprintf().
+ 	- Update IPv6 support for Microsoft Research IPv6 stack, v1.4
+-		- Use the versions of inet_ntop() and inet_pton() provided with the 
+-		  IPv6 stack, but retain our own implementation when building with 
++		- Use the versions of inet_ntop() and inet_pton() provided with the
++		  IPv6 stack, but retain our own implementation when building with
+ 		  IPv4 support only.
+ 		- Use getaddrinfo() rather than getnodebyname() to get our IPv6 address if
+-		  running with the Microsoft Research IPv6 stack. 
++		  running with the Microsoft Research IPv6 stack.
+ 		- We now require getaddrinfo() to be present in all IPv6 stacks: those which
+ 		  do not have this call (eg: the Musica IPv6 stack) MUST provide a workaround
+ 		  implementation.
+@@ -236,7 +236,7 @@
+ 	- Fix cname setup for Win32.
+ 	- Add udp_init_if() call, to open a UDP/IP socket bound to a
+ 	  specific interface
+-	- Add rtp_init_if() call, to open an RTP socket bound to a 
++	- Add rtp_init_if() call, to open an RTP socket bound to a
+ 	  specific interface
+ 	- Add asarray.[ch] string holding associative array.
+ 	- Fix compilation with -Wwrite-strings and -Wcast-align
+@@ -262,7 +262,7 @@
+ 	- Add check for udp socket allocation success in mbus_init.
+ 	- Add get_appname to util.[ch].
+ 	- Bound ttl to max 127 in rtp.c rather than asserting <= 127.
+-	- Change rtp_init to return NULL in rtp.c if ports or ttl 
++	- Change rtp_init to return NULL in rtp.c if ports or ttl
+ 	  inappropriate.
+ 	- Clarify that rtp_recv(), rtp_send_data() and rtp_send_ctrl() take an
+ 	  RTP format timestamp for the current time.
+@@ -272,12 +272,12 @@
+ 	- udp_get_host_addr4() will now return NULL on failure, and leave
+ 	  errno set.
+ 	- Workaround failure to get host IP address when setting the RTP
+-	  CNAME (we use user@127.0.0.1 as the CNAME in this case). 
++	  CNAME (we use user@127.0.0.1 as the CNAME in this case).
+ 	- Fix rtp_send_data() to correctly handle header extensions. This required
+ 	  a change to the API: the extn_len parameter now counts the length on the
+ 	  extension in 32 bit words minus one, and there is an additional extn_type
+ 	  parameter. If you don't use header extensions in your application, set the
+-	  additional parameter to zero. 
++	  additional parameter to zero.
+ 	- Fix reception of packets with RTP header extension.
+ 	* 16 May 2000
+ 
+@@ -302,19 +302,19 @@
+ 	* 8 September 2000 [rat v4.2.9]
+ 
+ v1.2.4	- Implement rtp_add_csrc() and rtp_del_csrc().
+-	- ifdef'ed out FreeBSD bug check in test_net_udp.c for Win32.  
++	- ifdef'ed out FreeBSD bug check in test_net_udp.c for Win32.
+ 	  Prevents compilation of test cases otherwise.  Reported by Micheal
+ 	  Stovenour <michael.stovenour@lucent.com>.
+ 	* 1 November 2000 [rat v4.2.10]
+ 
+-v1.2.5	- More informative error message when the lock on the mbus configuration 
++v1.2.5	- More informative error message when the lock on the mbus configuration
+ 	  file cannot be gained.
+ 	- rtp_init()/rtp_init_if() now take "const char *" for the address
+ 	- Fix expiration of our own SSRC from the RTP database, if filtering our
+ 	  packets.
+-	- Mark entries in the RTP source database as active senders if we can an 
++	- Mark entries in the RTP source database as active senders if we can an
+ 	  SR packet from them.
+-	- Cleanup RTP database once per second, rather than once per reporting 
++	- Cleanup RTP database once per second, rather than once per reporting
+ 	  interval. This is needed to ensure that reverse reconsideration works
+ 	  correctly, and sources are correctly deleted after BYEs are received.
+ 	- Fix reverse reconsideration of the RTCP interval
+@@ -324,9 +324,9 @@
+ 	  (patch from Timur Friedman).
+ 	- Add support for SDES PRIV (the correct formatting of the PRIV item
+ 	  into prefix length, prefix and value is left to the caller).
+-	- Change xmalloc to fill allocated buffer with dummy value when DEBUG 
++	- Change xmalloc to fill allocated buffer with dummy value when DEBUG
+ 	  is defined.  Change DEBUG_MEM version to use same dummy value rather
+-	  than a random value, reduces chances of uninitialized pointers 
++	  than a random value, reduces chances of uninitialized pointers
+ 	  trashing data before crashing.
+ 	- Add callback types to rtp.h - rtp_callback and rtcp_app_callback.
+ 	- For consistency rtp_{get,set}opt -> rtp_{get,set}_option.
+@@ -338,17 +338,17 @@
+ 	- Fix CSRC handling (patch from Ivo Sedlacek <ivo.sedlacek@anfdata.cz>)
+ 	- Fix uninitialized field in SDES PRIV handling (Robert Olson)
+ 	- Documented debug.[ch], hmac.[ch], md5.[ch], memory.[ch], rtp.[ch].
+-	- Added small rtp example. 
++	- Added small rtp example.
+ 	- Change configure to only select doc for build if gtkdoc installed.
+-	* 5 April 2001 [rat v4.2.14]	
++	* 5 April 2001 [rat v4.2.14]
+ 
+-1.2.6	- Fix so that we no longer send an RTCP BYE if we leave the session 
++1.2.6	- Fix so that we no longer send an RTCP BYE if we leave the session
+           before sending any other packets.
+ 	- Fix initial estimate of average RTCP packet size.
+ 	- Implement RTCP BYE reconsideration.
+ 	- Fix RTCP transmission interval.
+ 	- Fix handling of probationary sources in the RTP code (a source is
+-	  no longer treated as probationary if we've received RTCP packet 
++	  no longer treated as probationary if we've received RTCP packet
+ 	  from it).
+ 	* 24 April 2001 [rat v4.2.16]
+ 
+@@ -356,7 +356,7 @@
+           by Robert Olson <olson@mcs.anl.gov>.
+ 	- Fix IPv6 support on Linux
+ 	- Add configuration for Windows 2000 IPv6 stack
+-	- Connect/disconnect to socket before/after getsockname call to make 
++	- Connect/disconnect to socket before/after getsockname call to make
+ 	  it work
+ 	* 18 May 2001 [rat v4.2.17]
+ 
+@@ -395,6 +395,18 @@
+ 1.2.13  - Compilation fixes for Solaris8 (Kristian Hasler)
+         * 01 April 2003
+ 
++1.2.14  - Increase size of mreq structure by 4 because of bug in Win2k MSv6
++          library
++        - Added msvc build for a non-debug ipv6 win2k release.
++        * 30 April 2003
++
++1.2.15  - Added SAP/SDP support from Ivan Judson <judson@mcs.anl.gov>
++        - Removed changes to mreq (see 1.2.14) - bug fixed in XP
++        - Added code in mbus_recv function to ignore duplicate reliable messages
++        * 19 June 2003
++
++1.2.16  - Fix compilation with gcc33 (uint8_t value compared against 255).
++
+ Still to do...
+ 	- IPv6 code sometimes doesn't get the correct interface address,
+ 	  since it does a gethostbyname() and looks that up, yet that can
+diff -Nur common-1.2.14/src/common.dsp common-1.2.16/src/common.dsp
+--- common-1.2.14/src/common.dsp	2003-04-29 02:36:22.000000000 +0200
++++ common-1.2.16/src/common.dsp	2003-09-25 16:20:47.000000000 +0200
+@@ -4,7 +4,7 @@
+ 
+ # TARGTYPE "Win32 (x86) Static Library" 0x0104
+ 
+-CFG=common - Win32 Release IPv6 Win2000
++CFG=common - Win32 Release IPv6 XP
+ !MESSAGE This is not a valid makefile. To build this project using NMAKE,
+ !MESSAGE use the Export Makefile command and run
+ !MESSAGE 
+@@ -13,7 +13,7 @@
+ !MESSAGE You can specify a configuration when running NMAKE
+ !MESSAGE by defining the macro CFG on the command line. For example:
+ !MESSAGE 
+-!MESSAGE NMAKE /f "common.mak" CFG="common - Win32 Release IPv6 Win2000"
++!MESSAGE NMAKE /f "common.mak" CFG="common - Win32 Release IPv6 XP"
+ !MESSAGE 
+ !MESSAGE Possible choices for configuration are:
+ !MESSAGE 
+@@ -23,6 +23,7 @@
+ !MESSAGE "common - Win32 Debug IPv6 Win2000" (based on "Win32 (x86) Static Library")
+ !MESSAGE "common - Win32 Debug IPv6 MSR" (based on "Win32 (x86) Static Library")
+ !MESSAGE "common - Win32 Release IPv6 Win2000" (based on "Win32 (x86) Static Library")
++!MESSAGE "common - Win32 Release IPv6 XP" (based on "Win32 (x86) Static Library")
+ !MESSAGE 
+ 
+ # Begin Project
+@@ -170,6 +171,29 @@
+ # ADD BASE LIB32 /nologo /out:"Debug_IPv6\uclmm.lib"
+ # ADD LIB32 /nologo /out:"Release_IPv6\uclmm.lib"
+ 
++!ELSEIF  "$(CFG)" == "common - Win32 Release IPv6 XP"
++
++# PROP BASE Use_MFC 0
++# PROP BASE Use_Debug_Libraries 1
++# PROP BASE Output_Dir "common___Win32_Release_IPv6_XP"
++# PROP BASE Intermediate_Dir "common___Win32_Release_IPv6_XP"
++# PROP BASE Target_Dir ""
++# PROP Use_MFC 0
++# PROP Use_Debug_Libraries 1
++# PROP Output_Dir "Release_IPv6_XP"
++# PROP Intermediate_Dir "Release_IPv6_XP"
++# PROP Target_Dir ""
++# ADD BASE CPP /nologo /ML /W3 /GX /O2 /I "\src\tcl-8.0\generic" /I "\src\tk-8.0\generic" /I "\src\tk-8.0\xlib" /I "\DDK\inc" /I "\src\IPv6Kit\inc" /I "..\tcl-8.0\generic" /I "..\tk-8.0\generic" /I "..\tk-8.0\xlib" /I "..\ipv6kit\inc" /D "WIN2K_IPV6" /D "WIN32" /D "_NDEBUG" /D "_MBCS" /D "_LIB" /D "NDEBUG" /D "HAVE_IPv6" /D "BUILD_tcl" /D "BUILD_tk" /D "NEED_IN6_IS_ADDR_MULTICAST" /D "NEED_INET_PTON" /D "NEED_INET_NTOP" /YX /FD /c
++# ADD CPP /nologo /ML /W3 /GX /O2 /I "\src\tcl-8.0\generic" /I "\src\tk-8.0\generic" /I "\src\tk-8.0\xlib" /I "..\tcl-8.0\generic" /I "..\tk-8.0\generic" /I "..\tk-8.0\xlib" /I "\Program Files\Microsoft SDK\include" /D "WINXP_IPV6" /D "WIN32" /D "_NDEBUG" /D "_MBCS" /D "_LIB" /D "NDEBUG" /D "HAVE_IPv6" /D "BUILD_tcl" /D "BUILD_tk" /D "NEED_IN6_IS_ADDR_MULTICAST" /D "NEED_INET_PTON" /D "NEED_INET_NTOP" /YX /FD /c
++# ADD BASE RSC /l 0x409 /d "_DEBUG"
++# ADD RSC /l 0x409 /d "_DEBUG"
++BSC32=bscmake.exe
++# ADD BASE BSC32 /nologo
++# ADD BSC32 /nologo
++LIB32=link.exe -lib
++# ADD BASE LIB32 /nologo /out:"Release_IPv6\uclmm.lib"
++# ADD LIB32 /nologo /out:"Release_IPv6\uclmm.lib"
++
+ !ENDIF 
+ 
+ # Begin Target
+@@ -180,11 +204,16 @@
+ # Name "common - Win32 Debug IPv6 Win2000"
+ # Name "common - Win32 Debug IPv6 MSR"
+ # Name "common - Win32 Release IPv6 Win2000"
++# Name "common - Win32 Release IPv6 XP"
+ # Begin Group "Source Files"
+ 
+ # PROP Default_Filter "cpp;c;cxx;rc;def;r;odl;idl;hpj;bat"
+ # Begin Source File
+ 
++SOURCE=.\asarray.c
++# End Source File
++# Begin Source File
++
+ SOURCE=.\base64.c
+ # End Source File
+ # Begin Source File
+@@ -234,6 +263,11 @@
+ # PROP BASE Exclude_From_Build 1
+ # PROP Exclude_From_Build 1
+ 
++!ELSEIF  "$(CFG)" == "common - Win32 Release IPv6 XP"
++
++# PROP BASE Exclude_From_Build 1
++# PROP Exclude_From_Build 1
++
+ !ENDIF 
+ 
+ # End Source File
+@@ -255,6 +289,8 @@
+ 
+ !ELSEIF  "$(CFG)" == "common - Win32 Release IPv6 Win2000"
+ 
++!ELSEIF  "$(CFG)" == "common - Win32 Release IPv6 XP"
++
+ !ENDIF 
+ 
+ # End Source File
+@@ -320,6 +356,14 @@
+ # End Source File
+ # Begin Source File
+ 
++SOURCE=.\sap.c
++# End Source File
++# Begin Source File
++
++SOURCE=.\sdp.c
++# End Source File
++# Begin Source File
++
+ SOURCE=.\util.c
+ # End Source File
+ # End Group
+@@ -412,6 +456,14 @@
+ # End Source File
+ # Begin Source File
+ 
++SOURCE=.\sap.h
++# End Source File
++# Begin Source File
++
++SOURCE=.\sdp.h
++# End Source File
++# Begin Source File
++
+ SOURCE=.\util.h
+ # End Source File
+ # Begin Source File
+@@ -491,6 +543,22 @@
+ 	
+ # End Custom Build
+ 
++!ELSEIF  "$(CFG)" == "common - Win32 Release IPv6 XP"
++
++# Begin Custom Build
++InputPath=..\VERSION
++
++"version.h" : $(SOURCE) "$(INTDIR)" "$(OUTDIR)"
++	copy win32\set.txt + ..\VERSION win32\vergen.bat 
++	copy win32\vergen.bat + win32\null.txt win32\vergen.bat 
++	copy win32\vergen.bat + win32\echo.txt win32\vergen.bat 
++	win32\vergen.bat 
++	move win32\version.h version.h 
++	erase win32\version.h 
++	erase win32\vergen.bat 
++	
++# End Custom Build
++
+ !ENDIF 
+ 
+ # End Source File
+diff -Nur common-1.2.14/src/config_win32.h common-1.2.16/src/config_win32.h
+--- common-1.2.14/src/config_win32.h	2002-04-02 00:14:32.000000000 +0200
++++ common-1.2.16/src/config_win32.h	2003-09-25 16:20:47.000000000 +0200
+@@ -3,8 +3,8 @@
+  *
+  *  Windows specific definitions and includes.
+  *  
+- *  $Revision$
+- *  $Date$
++ *  $Revision$
++ *  $Date$
+  *
+  * Copyright (c) 1995-2000 University College London
+  * All rights reserved.
+@@ -57,6 +57,9 @@
+ #ifdef MUSICA_IPV6
+ #include <winsock6.h>
+ #else
++#ifdef WINXP_IPV6
++#include <ws2tcpip.h>
++#else
+ #ifdef WIN2K_IPV6
+ #include <ws2tcpip.h>
+ #include <tpipv6.h>
+@@ -66,6 +69,7 @@
+ #endif
+ #endif
+ #endif
++#endif
+ 
+ #ifndef MUSICA_IPV6
+ #include <ws2tcpip.h>
+diff -Nur common-1.2.14/src/inet_pton.c common-1.2.16/src/inet_pton.c
+--- common-1.2.14/src/inet_pton.c	1999-12-02 17:07:31.000000000 +0100
++++ common-1.2.16/src/inet_pton.c	2004-01-09 07:29:13.000000000 +0100
+@@ -92,7 +92,7 @@
+ 		const char *pch;
+ 
+ 		if ((pch = (char *) strchr(digits, ch)) != NULL) {
+-			uint8_t new = *tp * 10 + (pch - digits);
++			uint32_t new = *tp * 10 + (pch - digits);
+ 
+ 			if (new > 255)
+ 				return (0);
+diff -Nur common-1.2.14/src/Makefile.in common-1.2.16/src/Makefile.in
+--- common-1.2.14/src/Makefile.in	2001-04-27 00:58:23.000000000 +0200
++++ common-1.2.16/src/Makefile.in	2003-05-28 13:38:56.000000000 +0200
+@@ -16,7 +16,8 @@
+ 
+ OBJS = crypt_random.o debug.o md5.o memory.o net_udp.o qfDES.o util.o hmac.o  \
+        base64.o ntp.o rtp.o drand48.o mbus_parser.o mbus_config.o mbus_addr.o \
+-       mbus.o btree.o asarray.o @LIBOBJS@ rijndael-alg-fst.o rijndael-api-fst.o
++       mbus.o btree.o asarray.o @LIBOBJS@ rijndael-alg-fst.o \
++       rijndael-api-fst.o sdp.o sap.o 
+ 
+ SRCS = $(OBJS:%.o=%.c)
+ 
+diff -Nur common-1.2.14/src/mbus.c common-1.2.16/src/mbus.c
+--- common-1.2.14/src/mbus.c	2001-09-03 19:53:24.000000000 +0200
++++ common-1.2.16/src/mbus.c	2003-06-17 00:57:59.000000000 +0200
+@@ -49,6 +49,7 @@
+ #include "mbus_config.h"
+ #include "mbus_parser.h"
+ #include "mbus_addr.h"
++#include "asarray.h"
+ 
+ #define MBUS_BUF_SIZE	  1500
+ #define MBUS_ACK_BUF_SIZE 1500
+@@ -98,6 +99,9 @@
+ 	uint32_t		  index_sent;
+ };
+ 
++/* For recording reliable message sequence numbers, so we can ignore duplicates */
++static asarray *seq_numbers;
++
+ static void mbus_validate(struct mbus *m)
+ {
+ #ifdef DEBUG
+@@ -451,6 +455,8 @@
+ 	uint16_t         	 net_port;
+ 	int              	 net_scope;
+ 
++	asarray_create (&seq_numbers);
++
+ 	m = (struct mbus *) xmalloc(sizeof(struct mbus));
+ 	if (m == NULL) {
+ 		debug_msg("Unable to allocate memory for mbus\n");
+@@ -540,10 +546,12 @@
+         int i;
+ 
+         assert(m != NULL);
+-	mbus_validate(m);
++		mbus_validate(m);
+ 
+-	mbus_qmsg(m, "()", "mbus.bye", "", FALSE);
+-	mbus_send(m);
++		asarray_destroy(&seq_numbers);
++
++		mbus_qmsg(m, "()", "mbus.bye", "", FALSE);
++		mbus_send(m);
+ 
+ 	/* FIXME: It should be a fatal error to call mbus_exit() if some messages are still outstanding. */
+ 	/*        We will need an mbus_flush() call first though, to ensure nothing is waiting.          */
+@@ -879,16 +887,39 @@
+ 			mbus_parse_done(mp2);
+ 			/* ...if an ACK was requested, send one... */
+ 			if (strcmp(r, "R") == 0) {
+-				char 		*newsrc = (char *) xmalloc(strlen(src) + 3);
++				char 	*newsrc = (char *) xmalloc(strlen(src) + 3);
++				char	*newseq = (char *) xmalloc(9);
++				char	*value;
+ 				struct timeval	 t;
+ 
+-			debug_msg("received reliable msg %d, sending ACK\n", seq);
+-			
++				debug_msg("received reliable msg %d, sending ACK\n", seq);
++
+ 				sprintf(newsrc, "(%s)", src);	/* Yes, this is a kludge. */
++				sprintf(newseq, "(%6d)", seq);	/* size allocated in mb_header */
++
+ 				gettimeofday(&t, NULL);
+-			mb_header(++m->seqnum, t, 'U', m->addr, newsrc, seq);
++				mb_header(++m->seqnum, t, 'U', m->addr, newsrc, seq);
+ 				mb_send(m);
+-				xfree(newsrc);
++
++				/* Record sequence number of last reliable message from each source.
++				   If the next message we receive has the same source and same sequence
++				   number then it is a duplicate and we ignore it.  
++				*/
++				if (asarray_lookup (seq_numbers, newsrc, &value)) {
++					if (strcmp (value, newseq) == 0) {
++						debug_msg ("Duplicate reliable message received - ignored\n");
++						xfree (newseq);
++						xfree (newsrc);
++						continue;
++					} else {
++						asarray_remove(seq_numbers, newsrc);
++						asarray_add (seq_numbers, newsrc, newseq);
++					}
++				} else {
++					asarray_add (seq_numbers, newsrc, newseq);
++				}
++				xfree (newseq);
++				xfree (newsrc);
+ 			} else if (strcmp(r, "U") == 0) {
+ 				/* Unreliable message.... not need to do anything */
+ 			} else {
+diff -Nur common-1.2.14/src/net_udp.c common-1.2.16/src/net_udp.c
+--- common-1.2.14/src/net_udp.c	2003-04-29 02:35:34.000000000 +0200
++++ common-1.2.16/src/net_udp.c	2003-09-25 16:20:48.000000000 +0200
+@@ -1,7 +1,7 @@
+ /*
+  * FILE:     net_udp.c
+  * AUTHOR:   Colin Perkins 
+- * MODIFIED: Orion Hodson & Piers O'Hanlon
++ * MODIFIED: Orion Hodson, Piers O'Hanlon, Kristian Hasler
+  * 
+  * Copyright (c) 1998-2000 University College London
+  * All rights reserved.
+@@ -59,6 +59,10 @@
+ const struct	in6_addr	in6addr_any = {IN6ADDR_ANY_INIT};
+ #endif
+ 
++#ifdef WINXP_IPV6
++const struct	in6_addr	in6addr_any = {IN6ADDR_ANY_INIT};
++#endif
++
+ /* This is pretty nasty but it's the simplest way to get round */
+ /* the Detexis bug that means their MUSICA IPv6 stack uses     */
+ /* IPPROTO_IP instead of IPPROTO_IPV6 in setsockopt calls      */
+@@ -503,7 +507,7 @@
+ 	}
+ 	
+ 	if (IN6_IS_ADDR_MULTICAST(&(s->addr6))) {
+-		unsigned int      loop = 1, mreqsize = 0;
++		unsigned int      loop = 1;
+ 		struct ipv6_mreq  imr;
+ #ifdef MUSICA_IPV6
+ 		imr.i6mr_interface = 1;
+@@ -513,11 +517,7 @@
+ 		imr.ipv6mr_interface = 0;
+ #endif
+ 		
+-		mreqsize = sizeof(imr);
+-#ifdef WIN2K_IPV6
+-		mreqsize += 4;
+-#endif
+-		if (SETSOCKOPT(s->fd, IPPROTO_IPV6, IPV6_ADD_MEMBERSHIP, (char *) &imr, mreqsize) != 0) {
++		if (SETSOCKOPT(s->fd, IPPROTO_IPV6, IPV6_ADD_MEMBERSHIP, (char *) &imr, sizeof(imr)) != 0) {
+ 			socket_error("setsockopt IPV6_ADD_MEMBERSHIP");
+ 			return NULL;
+ 		}
+diff -Nur common-1.2.14/src/sap.c common-1.2.16/src/sap.c
+--- common-1.2.14/src/sap.c	1970-01-01 01:00:00.000000000 +0100
++++ common-1.2.16/src/sap.c	2003-05-28 13:03:35.000000000 +0200
+@@ -0,0 +1,188 @@
++/*
++ * FILE:     sap.c
++ * AUTHOR:   Ivan R. Judson  <judson@mcs.anl.gov>
++ *
++ * The routines in this file implement parsing and construction of data
++ * that's compliant with the Session Announcement Protocol, as specified 
++ * in RFC2974.
++ *
++ * $Revision$ 
++ * $Date$
++ * 
++ * Copyright (c) 2002 Argonne National Laboratory/University of Chicago
++ * All rights reserved.
++ *
++ * Redistribution and use in source and binary forms, with or without
++ * modification, is permitted provided that the following conditions 
++ * are met:
++ * 1. Redistributions of source code must retain the above copyright
++ *    notice, this list of conditions and the following disclaimer.
++ * 2. Redistributions in binary form must reproduce the above copyright
++ *    notice, this list of conditions and the following disclaimer in the
++ *    documentation and/or other materials provided with the distribution.
++ * 3. All advertising materials mentioning features or use of this software
++ *    must display the following acknowledgement:
++ *      This product includes software developed by the Mathematics and 
++ *      Computer Science Division of Argonne National Laboratory.
++ * 4. Neither the name of the University nor of the Department may be used
++ *    to endorse or promote products derived from this software without
++ *    specific prior written permission.
++ * THIS SOFTWARE IS PROVIDED BY THE AUTHORS AND CONTRIBUTORS ``AS IS'' AND
++ * ANY EXPRESSED OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
++ * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
++ * ARE DISCLAIMED.  IN NO EVENT SHALL THE AUTHORS OR CONTRIBUTORS BE LIABLE
++ * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
++ * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS
++ * OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
++ * HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
++ * LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
++ * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
++ * SUCH DAMAGE.
++ *
++ */
++
++#include "config_unix.h"
++#include "config_win32.h"
++#include "debug.h"
++#include "memory.h"
++#include "net_udp.h"
++#include "hmac.h"
++#include "qfDES.h"
++#include "base64.h"
++#include "gettimeofday.h"
++#include "vsnprintf.h"
++#include "sap.h"
++
++/*
++ * The "struct sap" defines an SAP session.
++ */
++
++#define SAP_DB_SIZE 2048
++
++struct sap {
++  socket_udp *s;
++  char *addr;
++  uint16_t port;
++  uint16_t ttl;
++  sap_callback callback;
++};
++
++struct sap *
++sap_init(const char *addr, uint16_t port, int ttl, sap_callback callback)
++{
++  struct sap *session;
++
++  session = (struct sap *)xmalloc(sizeof(struct sap));
++  memset (session, 0, sizeof(struct sap));
++
++  session->addr = xstrdup(addr);
++  session->port = port;
++  session->ttl = min(ttl, 127);
++  session->s = udp_init(addr, port, port, ttl);
++
++  if(session->s == NULL) {
++    xfree(session);
++    return(NULL);
++  }
++
++  session->callback = callback;
++
++  return session;
++}
++
++int
++sap_recv(struct sap *s, struct timeval *timeout)
++{
++  sap_packet sap_p;
++  sap_header *sap_h;
++  static unsigned char *packetptr;
++
++  udp_fd_zero();
++  udp_fd_set(s->s);
++  if(udp_select(timeout) > 0) {
++    if(udp_fd_isset(s->s)) {
++      uint8_t buffer[SAP_MAX_PACKET_LEN];
++      int     buflen;
++      buflen = udp_recv(s->s, buffer, SAP_MAX_PACKET_LEN);
++      packetptr = buffer;
++
++      sap_h = (sap_header *)buffer;
++      sap_p.header = sap_h;
++
++      packetptr += sizeof(sap_header);
++      sap_p.originating_source = packetptr;
++
++      packetptr += (sap_h->address_type) ? 16 : 4;
++      sap_p.authentication_data = packetptr;
++
++      packetptr += ntohs(sap_h->authentication_length/4);
++      sap_p.payload = strstr(packetptr, "v=0");
++
++      if(packetptr < sap_p.payload)
++	{
++	  sap_p.payload_type = packetptr;
++	} else {
++	  sap_p.payload_type = 0;
++	}
++
++      s->callback(&sap_p);
++    }
++    return TRUE;
++  }
++  return FALSE;
++}
++
++void 
++sap_done(struct sap *s)
++{
++  udp_exit(s->s);
++
++  xfree(s->addr);
++
++  xfree(s);
++}
++
++void 
++print_sap_packet(sap_packet *p)
++{
++  printf("SAP Header Information:\n");
++  printf("  Version:        %d\n", p->header->version);
++  printf("  Address Type:   %d\n", p->header->address_type);
++  printf("  Reserved Bit:   %d\n", p->header->reserved);
++  printf("  Message Type:   %d\n", p->header->message_type);
++  printf("  Encrypted Flag: %d\n", p->header->encrypted_payload);
++  printf("  Compressed Flag: %d\n", p->header->compressed_payload);
++  printf("  Authentication Length: %d\n", 
++	 ntohs(p->header->authentication_length));
++  printf("  Authentication Data: %d\n", 
++	 p->header->authentication_length ? strlen(p->authentication_data) : 0);
++  printf("  Message ID Hash: %d\n", 
++	 ntohs(p->header->message_identifier_hash));
++
++  if(p->header->address_type) 
++    {
++      // This is a 128 bit IPv6 address
++      printf("  Originating Source: %d.%d.%d.%d.%d.%d.%d.%d.%d.%d.%d.%d.%d.%d.%d.%d\n", 
++	     p->originating_source[0], p->originating_source[1],
++	     p->originating_source[2], p->originating_source[3],
++	     p->originating_source[4], p->originating_source[5],
++	     p->originating_source[6], p->originating_source[7],
++	     p->originating_source[8], p->originating_source[9],
++	     p->originating_source[10], p->originating_source[11],
++	     p->originating_source[12], p->originating_source[13],
++	     p->originating_source[14], p->originating_source[15]);
++    } 
++  else 
++    {
++      // This is a 32 bit IPv4 address
++      printf("  Originating Source: %d.%d.%d.%d\n", 
++	     p->originating_source[0], p->originating_source[1],
++	     p->originating_source[2], p->originating_source[3]);
++    }
++
++  if(p->payload_type != NULL)
++    printf("  Payload Type: %s\n", p->payload_type);
++
++  printf("  Payload: \n- - - - - - - - - -\n%s- - - - - - - - - -\n", 
++	 p->payload);
++}
+diff -Nur common-1.2.14/src/sap.h common-1.2.16/src/sap.h
+--- common-1.2.14/src/sap.h	1970-01-01 01:00:00.000000000 +0100
++++ common-1.2.16/src/sap.h	2003-05-28 13:03:36.000000000 +0200
+@@ -0,0 +1,94 @@
++/*
++ * FILE:   sap.h
++ * AUTHOR: Ivan R. Judson <judson@mcs.anl.gov> 
++ *
++ * $Revision$ 
++ * $Date$
++ * 
++ * Copyright (c) 2002 Argonne National Laboratory/University of Chicago
++ * All rights reserved.
++ *
++ * Redistribution and use in source and binary forms, with or without
++ * modification, is permitted provided that the following conditions 
++ * are met:
++ * 1. Redistributions of source code must retain the above copyright
++ *    notice, this list of conditions and the following disclaimer.
++ * 2. Redistributions in binary form must reproduce the above copyright
++ *    notice, this list of conditions and the following disclaimer in the
++ *    documentation and/or other materials provided with the distribution.
++ * 3. All advertising materials mentioning features or use of this software
++ *    must display the following acknowledgement:
++ *      This product includes software developed by the Mathematics and 
++ *      Computer Science Division of Argonne National Laboratory.
++ * 4. Neither the name of the University nor of the Department may be used
++ *    to endorse or promote products derived from this software without
++ *    specific prior written permission.
++ * THIS SOFTWARE IS PROVIDED BY THE AUTHORS AND CONTRIBUTORS ``AS IS'' AND
++ * ANY EXPRESSED OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
++ * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
++ * ARE DISCLAIMED.  IN NO EVENT SHALL THE AUTHORS OR CONTRIBUTORS BE LIABLE
++ * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
++ * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS
++ * OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
++ * HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
++ * LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
++ * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
++ * SUCH DAMAGE.
++ */
++
++#ifndef _SAP_H
++#define _SAP_H
++
++struct sap;
++
++#if defined(__cplusplus)
++extern "C" {
++#endif
++
++#define SAP_MAX_PACKET_LEN 1024
++
++typedef struct {
++#ifdef WORDS_BIGENDIAN
++  unsigned short version:3;
++  unsigned short address_type:1;
++  unsigned short reserved:1;
++  unsigned short message_type:1;
++  unsigned short encrypted_payload:1;
++  unsigned short compressed_payload:1;
++#else
++  unsigned short compressed_payload:1;
++  unsigned short encrypted_payload:1;
++  unsigned short message_type:1;
++  unsigned short reserved:1;
++  unsigned short address_type:1;
++  unsigned short version:3;
++#endif
++  uint8_t                authentication_length;
++  uint16_t               message_identifier_hash;
++} sap_header;
++
++typedef struct {
++  sap_header    *header;
++  unsigned char *originating_source;
++  unsigned char *authentication_data;
++  unsigned char *payload_type;
++  unsigned char *payload;
++} sap_packet;
++
++typedef void (*sap_callback)(sap_packet *packet);
++
++struct sap *sap_init(const char *addr, uint16_t port, int ttl, 
++		     sap_callback callback);
++
++int         sap_recv(struct sap *s, struct timeval *timeout);
++
++void        sap_done(struct sap *s);
++
++void        print_sap_packet(sap_packet *p);
++ 
++#if defined(__cplusplus)
++}
++#endif
++
++#endif
++		  
+diff -Nur common-1.2.14/src/sdp.c common-1.2.16/src/sdp.c
+--- common-1.2.14/src/sdp.c	1970-01-01 01:00:00.000000000 +0100
++++ common-1.2.16/src/sdp.c	2003-05-28 13:36:50.000000000 +0200
+@@ -0,0 +1,723 @@
++/*
++ * FILE:     sdp.c
++ * AUTHOR:   Ivan R. Judson  <judson@mcs.anl.gov>
++ *
++ * The routines in this file implement parsing and construction of data
++ * that's compliant with the Session Description Protocol, as specified 
++ * in RFC draft-ietf-mmusic-sdp-new-08.
++ *
++ * $Revision$ 
++ * $Date$
++ * 
++ * Copyright (c) 2002 Argonne National Laboratory/University of Chicago
++ * All rights reserved.
++ *
++ * Redistribution and use in source and binary forms, with or without
++ * modification, is permitted provided that the following conditions 
++ * are met:
++ * 1. Redistributions of source code must retain the above copyright
++ *    notice, this list of conditions and the following disclaimer.
++ * 2. Redistributions in binary form must reproduce the above copyright
++ *    notice, this list of conditions and the following disclaimer in the
++ *    documentation and/or other materials provided with the distribution.
++ * 3. All advertising materials mentioning features or use of this software
++ *    must display the following acknowledgement:
++ *      This product includes software developed by the Mathematics and 
++ *      Computer Science Division of Argonne National Laboratory.
++ * 4. Neither the name of the University nor of the Department may be used
++ *    to endorse or promote products derived from this software without
++ *    specific prior written permission.
++ * THIS SOFTWARE IS PROVIDED BY THE AUTHORS AND CONTRIBUTORS ``AS IS'' AND
++ * ANY EXPRESSED OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
++ * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
++ * ARE DISCLAIMED.  IN NO EVENT SHALL THE AUTHORS OR CONTRIBUTORS BE LIABLE
++ * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
++ * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS
++ * OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
++ * HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
++ * LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
++ * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
++ * SUCH DAMAGE.
++ *
++ */
++
++#include "config_unix.h"
++#include "config_win32.h"
++#include "debug.h"
++#include "memory.h"
++#include "sdp.h"
++
++int
++sdp_check_key(char keylist[], char *currentkey, char key)
++{
++  char *tempkey = keylist;
++
++  while(*tempkey != key) 
++    if(*tempkey != keylist[strlen(keylist)])
++      tempkey++;
++    else
++      return 0;
++
++  if(tempkey >= currentkey) {
++    currentkey = tempkey;
++    return 1;
++  } else {
++    return 0;
++  }
++}
++
++
++sdp_media *
++sdp_handle_session_key(sdp *session, char key, char *value)
++{
++  sdp_media *media = NULL, *curr_media = NULL;
++  sdp_repeat *repeat = NULL, *curr_repeat = NULL;
++  sdp_timezone *timezone = NULL;
++  sdp_network *network = NULL;
++  sdp_bandwidth_modifier *bwm;
++  sdp_attribute *attr, *curr_attr;
++  sdp_encryption *encrypt;
++  unsigned int n_char;
++
++  switch (key) {
++  case 'v':
++    session->protocol_version = atoi(value);
++    break;
++  case 'o':
++    network = xmalloc(sizeof(sdp_network));
++    memset (network, 0, sizeof(sdp_network));
++
++    sscanf(value, "%as %as %ld %as %as %as\n", 
++	   &(session->username),&(session->session_id), &(session->version), 
++	   &(network->network_type), &(network->address_type), 
++	   &(network->address));
++ 
++    network->number_of_addresses = 1;
++    session->network = network;
++
++    break;
++  case 's':
++    session->name = xstrdup(value);
++    break;
++  case 'i':
++    session->information = xstrdup(value);
++    break;
++  case 'u':
++    session->uri = xstrdup(value);
++    break;
++  case 'e':
++    session->email = xstrdup(value);
++    break;
++  case 'p':
++    session->phone = xstrdup(value);
++    break;
++  case 'c':
++    network = xmalloc(sizeof(sdp_network));
++    memset (network, 0, sizeof(sdp_network));
++
++    sscanf(value, "%as %as %as\n", &(network->network_type),
++	   &(network->address_type), &(network->address));
++
++    network->number_of_addresses = 1;
++
++    if(session->network != NULL) 
++      session->network = network;
++    else
++      xfree(network);
++
++    break;
++  case 'b':
++    bwm = xmalloc(sizeof(sdp_bandwidth_modifier));
++    memset (bwm, 0, sizeof(sdp_bandwidth_modifier));
++
++    sscanf(value, "%a[^:]:%a[^\n]", &(bwm->modifier), &(bwm->value));
++
++    if(session->bandwidth_modifier == NULL)
++      session->bandwidth_modifier = bwm;
++    else 
++      xfree(bwm);
++
++    break;
++  case 't':
++    sscanf(value, "%ld %ld\n", &(session->start_time), &(session->stop_time));
++
++    break;
++  case 'r':
++    repeat = xmalloc(sizeof(sdp_repeat));
++    memset (repeat, 0, sizeof(sdp_repeat));
++
++    sscanf(value, "%as %as %as\n", &(repeat->interval), &(repeat->duration), 
++	   &(repeat->offsets));
++
++    if(session->repeats == NULL)
++      session->repeats = repeat;
++    else {
++      curr_repeat = session->repeats;
++      while(curr_repeat != NULL) 
++	curr_repeat = curr_repeat->next;
++      curr_repeat->next = repeat; 
++    }
++    break;
++  case 'z':
++    /* This is icky but for now... */
++    timezone = xmalloc(sizeof(sdp_timezone));
++    memset(timezone, 0, sizeof(sdp_timezone));
++
++    sscanf(value, "%ld %ld", &(timezone->adjustment), &(timezone->offset));
++
++    session->timezones = timezone;
++    break;
++  case 'k':
++    encrypt = xmalloc(sizeof(sdp_encryption));
++    memset(encrypt, 0, sizeof(sdp_encryption));
++
++    sscanf(value, "%a[^:]:%a[^\n]", &(encrypt->method), &(encrypt->key));
++
++    if(session->encryption == NULL)
++      session->encryption = encrypt;
++    else
++      xfree(encrypt);
++
++    break;
++  case 'a':
++    attr = xmalloc(sizeof(sdp_attribute));
++    memset(attr, 0, sizeof(sdp_attribute));
++
++    n_char = strcspn(value, ":");
++
++    attr->key = xmalloc(n_char+1);
++    memset(attr->key, '\0', n_char+1);
++    strncpy(attr->key, value, n_char);
++
++    if(strlen(value) == n_char)
++      attr->value = NULL;
++    else {
++      attr->value = xmalloc(strlen(value) - n_char + 1);
++      memset(attr->value, '\0', strlen(value) - n_char + 1); 
++      strncpy(attr->value, value+n_char+1, strlen(value) - n_char);
++    }
++
++    if(session->attributes == NULL)
++      session->attributes = attr;
++    else {
++      curr_attr = session->attributes;
++      while(curr_attr->next != NULL)
++	curr_attr = curr_attr->next;
++      
++      curr_attr->next = attr;
++    }
++    break;
++  case 'm':
++    media = xmalloc(sizeof(sdp_media));
++    memset(media, 0, sizeof(sdp_media));
++    sscanf(value, "%as %d %as %as\n", &(media->name),
++	   &(media->port), &(media->transport), 
++	   &(media->format_list));
++    media->number_of_ports = 1;
++
++    if(session->media == NULL)
++      session->media = media;
++    else {
++      curr_media = session->media;
++      while(curr_media->next != NULL)
++	curr_media = curr_media->next;
++
++      curr_media->next = media;
++    }
++    break;
++  }
++
++  return media;
++}
++
++sdp_media *
++sdp_handle_media_key(sdp_media *media, char key, char *value)
++{
++  sdp_media *new_media;
++  sdp_network *network;
++  sdp_bandwidth_modifier *bwm;
++  sdp_attribute *attr, *curr_attr;
++  sdp_encryption *encrypt;
++  unsigned int n_char;
++
++  switch (key) {
++  case 'i':
++    media->information = xstrdup(value);
++    break;
++  case 'c':
++    network = xmalloc(sizeof(sdp_network));
++    memset (network, 0, sizeof(sdp_network));
++
++    sscanf(value, "%as %as %as\n", &(network->network_type),
++	   &(network->address_type), &(network->address));
++
++    network->number_of_addresses = 1;
++
++    if(media->network == NULL)
++      media->network = network;
++    else
++      xfree(network);
++
++    break;
++  case 'b':
++    bwm = xmalloc(sizeof(sdp_bandwidth_modifier));
++    memset (bwm, 0, sizeof(sdp_bandwidth_modifier));
++
++    sscanf(value, "%as:%as\n", &(bwm->modifier), &(bwm->value));
++
++    if(media->bandwidth_modifier == NULL)
++      media->bandwidth_modifier = bwm;
++    else
++      xfree(bwm);
++
++    break;
++  case 'k':
++    encrypt = xmalloc(sizeof(sdp_encryption));
++    memset(encrypt, 0, sizeof(sdp_encryption));
++
++    sscanf(value, "%as:%as\n", &(encrypt->method), &(encrypt->key));
++
++    if(media->encryption == NULL)
++      media->encryption = encrypt;
++    else 
++      xfree(encrypt);
++
++    break;
++  case 'a':
++    attr = xmalloc(sizeof(sdp_attribute));
++    memset(attr, 0, sizeof(sdp_attribute));
++
++    n_char = strcspn(value, ":");
++
++    attr->key = xmalloc(n_char+1);
++    memset(attr->key, '\0', n_char+1);
++    strncpy(attr->key, value, n_char);
++
++    if(strlen(value) == n_char)
++      attr->value = NULL;
++    else {
++      attr->value = xmalloc(strlen(value) - n_char + 1);
++      memset(attr->value, '\0', strlen(value) - n_char + 1); 
++      strncpy(attr->value, value+n_char+1, strlen(value) - n_char);
++    }
++
++    if(media->attributes == NULL)
++      media->attributes = attr;
++    else {
++      curr_attr = media->attributes;
++      while(curr_attr->next != NULL)
++	curr_attr = curr_attr->next;
++      
++      curr_attr->next = attr;
++    }
++    break;
++  case 'm':
++    new_media = xmalloc(sizeof(sdp_media));
++    memset(new_media, 0, sizeof(sdp_media));
++    sscanf(value, "%as %d %as %as\n", &(new_media->name),
++	   &(new_media->port), &(new_media->transport), 
++	   &(new_media->format_list));
++    new_media->number_of_ports = 1;
++    
++    media->next = new_media;
++    media = media->next;
++    break;
++  }
++
++  return media;
++}
++
++sdp *sdp_parse(char *sdp_string)
++{
++  static char sessionkeys[] = "vosiuepcbtrzkam";
++  static char mediakeys[]   = "micbka";
++  static char *current_key;
++  int goodkey = 0;
++  sdp_media *media = NULL;
++  char *line = NULL, key, *value = NULL;
++  static char *pos;
++  sdp *session = NULL;
++  int n_char;
++
++  if(sdp_string != NULL) {
++    current_key = sessionkeys;
++    session = xmalloc(sizeof(sdp));
++    memset (session, 0, sizeof(sdp));
++
++    session->original = xstrdup(sdp_string);
++
++    pos = sdp_string;
++
++    do {
++      n_char = strcspn(pos, "\n");
++
++      line = xmalloc(n_char+1);
++      memset(line, '\0', n_char+1);
++      strncpy(line, pos, n_char);
++      pos += n_char + 1;
++      
++      if(strchr(line, '=') != NULL) {
++	key = line[0];
++	value = &(line[2]);
++
++	if(media == NULL) {
++	  if((goodkey = sdp_check_key(sessionkeys, current_key, key)) == 1) 
++	    media = sdp_handle_session_key(session, key, value);
++	  else
++	    printf("Bad Session Key!\n");
++	} else {
++	  if((goodkey = sdp_check_key(mediakeys, current_key, key)) == 1) 
++	    media = sdp_handle_media_key(media, key, value);
++	  else
++	    printf("Bad Media Key!\n");
++	}
++      }
++      xfree(line);
++    } while (n_char != 0);
++  }
++  
++  return session;
++}
++
++void sdp_print(sdp *session)
++{
++  if(session != NULL) {
++    sdp_media *current_media = session->media;
++    sdp_attribute *current_attribute = session->attributes;
++
++    printf("Protocol Version: %d\n", session->protocol_version);
++    printf("Username: %s\n", session->username);
++    printf("Session ID: %s\n", session->session_id);
++    printf("Version: %ld\n", session->version);
++    printf("Name: %s\n", session->name);
++    printf("Information: %s\n", session->information);
++    printf("URI: %s\n", session->uri);
++    printf("Email: %s\n", session->email);
++    printf("Phone: %s\n", session->phone);
++    printf("Start Time: %ld\n", session->start_time);
++    printf("Stop Time: %ld\n", session->stop_time);
++
++    if(session->network != NULL) {
++      sdp_print_network(session->network);
++    }
++
++    if(session->bandwidth_modifier != NULL) {
++      printf("Bandwidth Modifier\n");
++      printf("\tModifier: %s\n", session->bandwidth_modifier->modifier);
++      printf("\tValue: %s\n", session->bandwidth_modifier->value);
++    }
++
++    printf("Session Attributes:\n");
++    while(current_attribute != NULL) {
++      printf("\tAttribute: %s Value: %s\n", 
++	     current_attribute->key, current_attribute->value);
++      current_attribute = current_attribute->next;
++    }
++
++    current_media = session->media;
++    while(current_media != NULL) {
++      sdp_print_media(current_media);
++      current_media = current_media->next;
++    }
++  }
++}
++
++void
++sdp_print_network(sdp_network *network)
++{
++  printf("Network Information:\n");
++  printf("\tNetwork Type: %s\n", network->network_type);
++  printf("\tAddress Type: %s\n", network->address_type);
++  printf("\tAddress: %s\n", network->address);
++  printf("\t# of Addresses: %d\n", network->number_of_addresses);
++}
++
++void
++sdp_print_media(sdp_media *media)
++{
++  sdp_attribute *curr_attr = media->attributes;
++
++  printf("Media Configuration:\n");
++  printf("\tName: %s\n", media->name);
++  printf("\tPort: %d Number of Ports: %d\n", media->port,
++	 media->number_of_ports);
++  if(media->network != NULL) {
++    sdp_print_network(media->network);
++  }
++  printf("\tTransport: %s\n", media->transport);
++  printf("\tInformation: %s\n", media->information);
++
++  if(media->attributes != NULL) {
++    printf("\tMedia Attributes:\n");
++    while(curr_attr != NULL) {
++      printf("\t\tAttribute: %s Value: %s\n", curr_attr->key, 
++	     curr_attr->value);
++      curr_attr = curr_attr->next;
++    }
++  }
++}
++
++char *
++sdp_make(sdp *session)
++{
++  sdp_timezone *tz;
++  sdp_attribute *attr;
++  sdp_media *media;
++  char *sdp_string;
++
++  sdp_string = xmalloc(4096);
++
++  sprintf(sdp_string, "v=%d\n", session->protocol_version);
++  sprintf(sdp_string, "%so=%s %s %ld", sdp_string,
++	   session->username, session->session_id, session->version);
++  if(session->network != NULL) {
++    sprintf(sdp_string, "%s %s %s %s\n", sdp_string,
++	     session->network->network_type, 
++	     session->network->address_type,
++	     session->network->address);
++  }
++  sprintf(sdp_string, "%ss=%s\n", sdp_string, session->name);
++
++  if(session->information != NULL)
++    sprintf(sdp_string, "%si=%s\n", sdp_string, session->information);
++
++  if(session->uri != NULL)
++    sprintf(sdp_string, "%su=%s\n", sdp_string, session->uri);
++
++  if(session->email != NULL)
++    sprintf(sdp_string, "%se=%s\n", sdp_string, session->email);
++
++  if(session->phone != NULL)
++    sprintf(sdp_string, "%sp=%s\n", sdp_string, session->phone);
++
++  if(session->network != NULL)
++    sprintf(sdp_string, "%sc=%s %s %s\n", sdp_string,
++	    session->network->network_type,
++	    session->network->address_type,
++	    session->network->address);
++
++  if(session->bandwidth_modifier != NULL)
++    sprintf(sdp_string, "%sb=%s:%s\n", sdp_string, 
++	    session->bandwidth_modifier->modifier, 
++	    session->bandwidth_modifier->value);
++
++  sprintf(sdp_string, "%st=%ld %ld\n", sdp_string, 
++	  session->start_time, session->stop_time);
++
++  if(session->timezones != NULL) {
++    tz = session->timezones;
++    sprintf(sdp_string, "%sz=%ld %ld", sdp_string, tz->adjustment, tz->offset);
++
++    while(tz->next != NULL) {
++      sprintf(sdp_string, "%s %ld %ld", sdp_string,
++	      tz->next->adjustment, tz->next->offset);
++      tz = tz->next;
++    }
++    sprintf(sdp_string, "%s\n", sdp_string);
++  }
++
++  if(session->encryption != NULL) {
++    if(session->encryption->key == NULL)
++      sprintf(sdp_string, "%sk=%s\n", sdp_string, 
++	      session->encryption->method);
++    else
++      sprintf(sdp_string, "%sk=%s:%s\n", sdp_string, 
++	      session->encryption->method,
++	      session->encryption->key);
++  }
++  
++  attr = session->attributes;
++  while(attr != NULL) {
++    sprintf(sdp_string, "%sa=%s:%s\n", sdp_string,
++	    attr->key, attr->value);
++    attr = attr->next;
++  }
++
++  media = session->media;
++  while(media != NULL) {
++    if(media->number_of_ports > 1)
++      sprintf(sdp_string, "%sm=%s %d/%d %s %s\n", sdp_string,
++	      media->name, media->port, media->number_of_ports,
++	      media->transport, media->format_list);
++    else
++      sprintf(sdp_string, "%sm=%s %d %s %s\n", sdp_string,
++	      media->name, media->port, media->transport, 
++	      media->format_list);
++    if(media->information != NULL)
++      sprintf(sdp_string, "%si=%s\n", sdp_string, media->information);
++    
++    if(media->network != NULL)
++      sprintf(sdp_string, "%sc=%s %s %s\n", sdp_string,
++	      media->network->network_type,
++	      media->network->address_type,
++	      media->network->address);
++
++    if(media->bandwidth_modifier != NULL)
++      sprintf(sdp_string, "%sb=%s:%s\n", sdp_string, 
++	      media->bandwidth_modifier->modifier, 
++	      media->bandwidth_modifier->value);
++
++    if(media->encryption != NULL) {
++      if(media->encryption->key == NULL)
++	sprintf(sdp_string, "%sk=%s\n", sdp_string, 
++		media->encryption->method);
++      else
++	sprintf(sdp_string, "%sk=%s:%s\n", sdp_string, 
++		media->encryption->method,
++		media->encryption->key);
++    }
++  
++    attr = media->attributes;
++    while(attr != NULL) {
++      sprintf(sdp_string, "%sa=%s:%s\n", sdp_string,
++	      attr->key, attr->value);
++      attr = attr->next;
++    }
++    media = media->next;
++  }
++
++  return sdp_string;
++}
++
++void
++sdp_free(sdp *session)
++{
++  sdp_media *media, *cmedia;
++  sdp_attribute *attr, *cattr;
++  sdp_repeat *repeat, *crepeat;
++
++  if(session->username != NULL)
++    xfree(session->username);
++
++  if(session->session_id != NULL)
++    xfree(session->session_id);
++
++  if(session->network != NULL)
++    sdp_free_network(session->network);
++
++  if(session->name != NULL)
++    xfree(session->name);
++
++  if(session->information != NULL)
++    xfree(session->information);
++
++  if(session->uri != NULL)
++    xfree(session->uri);
++
++  if(session->email != NULL)
++    xfree(session->email);
++  
++  if(session->phone != NULL) 
++    xfree(session->phone);
++
++  if(session->bandwidth_modifier != NULL)
++    sdp_free_bandwidth_modifier(session->bandwidth_modifier);
++
++  if(session->timezones != NULL)
++    xfree(session->timezones);
++
++  if(session->encryption != NULL)
++    sdp_free_encryption(session->encryption);
++
++  repeat = session->repeats;
++  while(repeat != NULL) {
++    crepeat = repeat;
++    repeat = repeat->next;
++    sdp_free_repeat(crepeat);
++  }
++
++  attr = session->attributes;
++  while(attr != NULL) {
++    cattr = attr;
++    attr = attr->next;
++    sdp_free_attribute(cattr);
++  }
++
++  media = session->media;
++  while(media != NULL) {
++    cmedia = media;
++    media = media->next;
++    sdp_free_media(cmedia);
++  }
++  
++  if(session->original != NULL)
++    xfree(session->original);
++
++  xfree(session);
++}
++
++void
++sdp_free_network(sdp_network *network)
++{
++  xfree(network->network_type);
++  xfree(network->address_type);
++  xfree(network->address);
++  xfree(network);
++}
++
++void
++sdp_free_attribute(sdp_attribute *attr)
++{
++  xfree(attr->key);
++  if(attr->value != NULL)
++    xfree(attr->value);
++  xfree(attr);
++}
++
++void
++sdp_free_encryption(sdp_encryption *encr)
++{
++  xfree(encr->method);
++  xfree(encr->key);
++  xfree(encr);
++}
++
++void
++sdp_free_bandwidth_modifier(sdp_bandwidth_modifier *bwm)
++{
++  xfree(bwm->modifier);
++  xfree(bwm->value);
++  xfree(bwm);
++}
++
++void
++sdp_free_repeat(sdp_repeat *repeat)
++{
++  xfree(repeat->interval);
++  xfree(repeat->duration);
++  xfree(repeat->offsets);
++  xfree(repeat);
++}
++
++void 
++sdp_free_media(sdp_media *media)
++{
++  sdp_attribute *attr, *cattr;
++
++  xfree(media->name);
++
++  if(media->network != NULL)
++    sdp_free_network(media->network);
++
++  xfree(media->transport);
++  xfree(media->format_list);
++
++  if(media->information != NULL)
++    xfree(media->information);
++  
++  if(media->bandwidth_modifier != NULL)
++    sdp_free_bandwidth_modifier(media->bandwidth_modifier);
++
++  if(media->encryption != NULL)
++    sdp_free_encryption(media->encryption);
++
++  attr = media->attributes;
++  while(attr != NULL) {
++    cattr = attr;
++    attr = attr->next;
++    sdp_free_attribute(cattr);
++  }
++
++  xfree(media);
++}
++
+diff -Nur common-1.2.14/src/sdp.h common-1.2.16/src/sdp.h
+--- common-1.2.14/src/sdp.h	1970-01-01 01:00:00.000000000 +0100
++++ common-1.2.16/src/sdp.h	2003-05-28 13:03:37.000000000 +0200
+@@ -0,0 +1,146 @@
++/*
++ * FILE:   sdp.h
++ * AUTHOR: Ivan R. Judson <judson@mcs.anl.gov>
++ *
++ * $Revision$ 
++ * $Date$
++ * 
++ * Copyright (c) 2002 Argonne National Laboratory/University of Chicago
++ * All rights reserved.
++ *
++ * Redistribution and use in source and binary forms, with or without
++ * modification, is permitted provided that the following conditions 
++ * are met:
++ * 1. Redistributions of source code must retain the above copyright
++ *    notice, this list of conditions and the following disclaimer.
++ * 2. Redistributions in binary form must reproduce the above copyright
++ *    notice, this list of conditions and the following disclaimer in the
++ *    documentation and/or other materials provided with the distribution.
++ * 3. All advertising materials mentioning features or use of this software
++ *    must display the following acknowledgement:
++ *      This product includes software developed by the Mathematics and 
++ *      Computer Science Division of Argonne National Laboratory.
++ * 4. Neither the name of the University nor of the Department may be used
++ *    to endorse or promote products derived from this software without
++ *    specific prior written permission.
++ * THIS SOFTWARE IS PROVIDED BY THE AUTHORS AND CONTRIBUTORS ``AS IS'' AND
++ * ANY EXPRESSED OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
++ * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
++ * ARE DISCLAIMED.  IN NO EVENT SHALL THE AUTHORS OR CONTRIBUTORS BE LIABLE
++ * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
++ * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS
++ * OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
++ * HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
++ * LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
++ * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
++ * SUCH DAMAGE.
++ */
++
++#ifndef _SDP_H
++#define _SDP_H
++
++#if defined(__cplusplus)
++extern "C" {
++#endif
++
++  typedef struct sdp_network {
++    char *network_type;
++    char *address_type;
++    char *address;
++    int number_of_addresses;
++  } sdp_network;
++
++  typedef struct sdp_attribute {
++    struct sdp_attribute *next;
++    char *key;
++    char *value;
++  } sdp_attribute;
++
++  typedef struct sdp_encryption {
++    char *method;
++    char *key;
++  } sdp_encryption;
++
++  typedef struct sdp_bandwidth_modifier {
++    char *modifier;
++    char *value;
++  } sdp_bandwidth_modifier;
++
++  typedef struct sdp_media {
++    struct sdp_media *next;
++    char *name;
++    int port;
++    int number_of_ports;
++    sdp_network *network;
++    char *transport;
++    char *format_list;
++    char *information;
++    sdp_bandwidth_modifier *bandwidth_modifier;
++    sdp_encryption *encryption;
++    sdp_attribute *attributes;
++  } sdp_media;
++
++  typedef struct sdp_timezone {
++    struct sdp_timezone *next;
++    long adjustment;
++    long offset;
++  } sdp_timezone;
++
++  typedef struct sdp_repeat {
++    struct sdp_repeat *next;
++    char *interval;
++    char *duration;
++    char *offsets;
++  } sdp_repeat;
++
++typedef struct sdp {
++  int protocol_version;
++  char *username;
++  char *session_id;
++  long version;
++  sdp_network *network;
++  char *name;
++  char *information;
++  char *uri;
++  char *email;
++  char *phone;
++  sdp_bandwidth_modifier *bandwidth_modifier;
++  sdp_timezone *timezones;
++  sdp_encryption *encryption;
++  sdp_attribute *attributes;
++
++  long start_time;
++  long stop_time;
++  sdp_repeat *repeats;
++
++  sdp_media *media;
++
++  char *original;
++} sdp;
++
++
++int sdp_check_key(char *keylist, char *currentkey, char key);
++sdp_media *sdp_handle_session_key(sdp *session, char key, char *value);
++sdp_media *sdp_handle_media_key(sdp_media *media, char key, char *value);
++
++sdp *sdp_parse(char *sdp_string);
++
++void sdp_print(sdp *session); 
++void sdp_print_media(sdp_media *media);
++void sdp_print_network(sdp_network *network);
++
++char *sdp_make(sdp *session);;
++
++void sdp_free(sdp *session);
++void sdp_free_media(sdp_media *media);
++void sdp_free_attribute(sdp_attribute *attr);
++void sdp_free_encryption(sdp_encryption *encr);
++void sdp_free_bandwidth_modifier(sdp_bandwidth_modifier *bwm);
++void sdp_free_repeat(sdp_repeat *repeat);
++void sdp_free_network(sdp_network *network);
++
++#if defined(__cplusplus)
++}
++#endif
++
++#endif
+diff -Nur common-1.2.14/VERSION common-1.2.16/VERSION
+--- common-1.2.14/VERSION	2003-04-01 16:50:58.000000000 +0200
++++ common-1.2.16/VERSION	2004-01-09 07:25:06.000000000 +0100
+@@ -1 +1 @@
+-1.2.14
++1.2.16

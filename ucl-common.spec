@@ -1,61 +1,102 @@
 
 # OBSOLETED by rat.spec, but may be needed again
+# or maybe better use this version (shared library) in rat.spec?
 
 Summary:	UCL Common Code Library
 Summary(pl):	Biblioteka wspólnego kodu UCL
 Name:		ucl-common
-Version:	1.2.0
+Version:	1.2.8
 Release:	1
 License:	custom
 Group:		Libraries
 Source0:	http://www-mice.cs.ucl.ac.uk/multimedia/software/common/common-%{version}.tar.gz
-Patch0:		%{name}-time_h.patch
+Patch0:		%{name}-gcc3.patch
+Patch1:		%{name}-shared.patch
 URL:		http://www-mice.cs.ucl.ac.uk/multimedia/software/
+BuildRequires:	autoconf
+BuildRequires:	automake
+BuildRequires:	gtk-doc
+BuildRequires:	libtool
 BuildRoot:	%{tmpdir}/%{name}-%{version}-root-%(id -u -n)
 
+%define		_includedir	/usr/include/ucl
+
 %description
-Routines common to a number of multimedia tools. This library is
-required to build RAT v3.2.7 or later, and may be needed for other UCL
-tools.
+Routines common to a number of multimedia tools. The library
+originates from work on the RAT project: these are portions that are
+not directly related to an audio tool and potentially useful
+elsewhere.
 
 %description -l pl
 Procedury u¿ywane przez kilka narzêdzi multimedialnych. Biblioteka ta
-jest wymagana do zbudowania RAT w. 3.2.7 lub nowsza i mo¿e byæ
-potrzebna dla innych narzêdzi UCL.
+wywodzi siê z prac nad projektem RAT, ale jej czêsci nie s± zwi±zane
+wy³±cznie z narzêdziami do d¼wiêku i mog± byæ przydatne do innych
+celów.
 
 %package devel
-Summary:	Development part of UCL Common Code Library
-Summary(pl):	Nag³ówki do biblioteki wspólnego kodu UCL
+Summary:	Header files for UCL Common Code Library
+Summary(pl):	Pliki nag³ówkowe do biblioteki wspólnego kodu UCL
 Group:		Development/Libraries
+Requires:	%{name} = %{version}
 
 %description devel
-Development part of UCL Common Code Library.
+Header files for UCL Common Code Library.
 
 %description devel -l pl
-Programistyczna czê¶æ biblioteki wspólnego kodu UCL.
+Pliki nag³ówkowe biblioteki wspólnego kodu UCL.
+
+%package static
+Summary:	UCL Common Code static library
+Summary(pl):	Statyczna biblioteka wspólnego kodu UCL
+Group:		Development/Libraries
+Requires:	%{name}-devel = %{version}
+
+%description static
+UCL Common Code static library.
+
+%description static -l pl
+Statyczna biblioteka wspólnego kodu UCL.
 
 %prep
 %setup -qn common
 %patch0 -p1
+%patch1 -p1
 
 %build
-%configure2_13 \
+cp -f /usr/share/automake/config.* .
+%{__libtoolize}
+%{__aclocal}
+%{__autoconf}
+%configure \
 	--enable-ipv6
 %{__make}
 
 %install
 rm -rf $RPM_BUILD_ROOT
 
-install -d $RPM_BUILD_ROOT{%{_libdir},%{_includedir}/ucl}
-install libuclmmbase.a $RPM_BUILD_ROOT%{_libdir}
-install *.h $RPM_BUILD_ROOT%{_includedir}/ucl
-rm -f $RPM_BUILD_ROOT%{_includedir}/ucl/test*
+%{__make} -C src install \
+	DESTDIR=$RPM_BUILD_ROOT
+
+rm -rf doc/html/CVS
 
 %clean
 rm -rf $RPM_BUILD_ROOT
 
+%post	-p /sbin/ldconfig
+%postun	-p /sbin/ldconfig
+
+%files
+%defattr(644,root,root,755)
+%doc COPYRIGHT* MODS* README* src/README.qfdes
+%attr(755,root,root) %{_libdir}/lib*.so.*.*
+
 %files devel
 %defattr(644,root,root,755)
-%doc COPYRIGHT* MODS* README*
-%{_includedir}/ucl/*
-%{_libdir}/*
+%doc doc/html
+%attr(755,root,root) %{_libdir}/lib*.so
+%{_libdir}/lib*.la
+%{_includedir}
+
+%files static
+%defattr(644,root,root,755)
+%{_libdir}/lib*.a

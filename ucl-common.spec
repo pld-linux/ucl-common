@@ -51,8 +51,6 @@ install libuclmmbase.a $RPM_BUILD_ROOT%{_libdir}
 install *.h $RPM_BUILD_ROOT%{_includedir}/ucl
 rm -f $RPM_BUILD_ROOT%{_includedir}/ucl/test*
 
-gzip -9nf COPYRIGHT MODS README*
-
 %clean
 rm -rf $RPM_BUILD_ROOT
 

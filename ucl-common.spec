@@ -10,6 +10,7 @@ Release:	1
 License:	custom
 Group:		Libraries
 Source0:	http://www-mice.cs.ucl.ac.uk/multimedia/software/common/common-%{version}.tar.gz
+# Source0-md5:	73f6b1feb2e0223bfcc196657d1979c0
 Patch0:		%{name}-shared.patch
 Patch1:		%{name}-acfix.patch
 URL:		http://www-mice.cs.ucl.ac.uk/multimedia/software/

@@ -35,7 +35,7 @@ elsewhere.
 
 %description -l pl
 Procedury u¿ywane przez kilka narzêdzi multimedialnych. Biblioteka ta
-wywodzi siê z prac nad projektem RAT, ale jej czêsci nie s± zwi±zane
+wywodzi siê z prac nad projektem RAT, ale jej czê¶ci nie s± zwi±zane
 wy³±cznie z narzêdziami do d¼wiêku i mog± byæ przydatne do innych
 celów.
 

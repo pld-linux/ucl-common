@@ -12,3 +12,28 @@
  
        mb_bufpos += strlen(mb_bufpos);
  	if (ackseq == -1) {
+--- common-1.2.14/src/inet_ntop.h.orig	2000-01-20 16:11:19.000000000 +0000
++++ common-1.2.14/src/inet_ntop.h	2004-04-12 23:02:43.000000000 +0000
+@@ -1,4 +1,4 @@
+-#ifndef HAVE_INET_NTOP
++#ifdef NEED_INET_NTOP
+ #if defined(__cplusplus)
+ extern "C" {
+ #endif
+@@ -8,4 +8,4 @@
+ #if defined(__cplusplus)
+ }
+ #endif
+-#endif /* HAVE_INET_NTOP */
++#endif /* NEED_INET_NTOP */
+--- rat-4.2.25/common/src/inet_ntop.c.orig	1999-12-02 16:07:31.000000000 +0000
++++ rat-4.2.25/common/src/inet_ntop.c	2004-04-12 23:03:06.000000000 +0000
+@@ -16,7 +16,7 @@
+  * SOFTWARE.
+  */
+ 
+-#ifndef HAVE_INET_NTOP
++#ifdef NEED_INET_NTOP
+ #include "config_unix.h"
+ #include "config_win32.h"
+ #include "inet_ntop.h"

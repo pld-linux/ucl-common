@@ -1,0 +1,22 @@
+diff -durN common.orig/qfDES.c common/qfDES.c
+--- common.orig/qfDES.c	Thu Nov 18 23:49:09 1999
++++ common/qfDES.c	Tue Jun 12 19:37:27 2001
+@@ -11,6 +11,7 @@
+ #include "config_win32.h"
+ #include "qfDES.h"
+ #include "crypt_random.h"
++#include <time.h>
+ 
+ typedef unsigned long Word;
+ 
+diff -durN common.orig/test_net_udp.c common/test_net_udp.c
+--- common.orig/test_net_udp.c	Tue May 16 19:03:01 2000
++++ common/test_net_udp.c	Tue Jun 12 19:37:43 2001
+@@ -38,6 +38,7 @@
+ #include "debug.h"
+ #include "net_udp.h"
+ #include "test_net_udp.h"
++#include <time.h>
+ 
+ #define BUFSIZE 1024
+ 

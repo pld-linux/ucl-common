@@ -2,18 +2,22 @@
 # OBSOLETED by rat.spec, but may be needed again
 
 Summary:	UCL Common Code Library
+Summary(pl):	Biblioteka wspСlnego kodu UCL
 Name:		ucl-common
 Version:	1.2.0
 Release:	1
+License:	Custom
 Group:		Libraries
 Group(de):	Libraries
 Group(es):	Bibliotecas
 Group(fr):	Librairies
 Group(pl):	Biblioteki
+Group(pt_BR):	Bibliotecas
+Group(ru):	Библиотеки
+Group(uk):	Б╕бл╕отеки
 Source0:	http://www-mice.cs.ucl.ac.uk/multimedia/software/common/common-%{version}.tar.gz
 Patch0:		%{name}-time_h.patch
 URL:		http://www-mice.cs.ucl.ac.uk/multimedia/software/
-License:	Custom
 BuildRoot:	%{tmpdir}/%{name}-%{version}-root-%(id -u -n)
 
 %description
@@ -28,13 +32,21 @@ potrzebna dla innych narzЙdzi UCL.
 
 %package devel
 Summary:	Development part of UCL Common Code Library
+Summary(pl):	NagЁСwki do biblioteki wspСlnego kodu UCL
 Group:		Development/Libraries
 Group(de):	Entwicklung/Libraries
+Group(es):	Desarrollo/Bibliotecas
 Group(fr):	Development/Librairies
 Group(pl):	Programowanie/Biblioteki
+Group(pt_BR):	Desenvolvimento/Bibliotecas
+Group(ru):	Разработка/Библиотеки
+Group(uk):	Розробка/Б╕бл╕отеки
 
 %description devel
 Development part of UCL Common Code Library.
+
+%description devel -l pl
+Programistyczna czЙ╤Ф biblioteki wspСlnego kodu UCL.
 
 %prep
 %setup -qn common

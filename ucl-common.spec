@@ -8,7 +8,7 @@ Summary(pl):	Biblioteka wspólnego kodu UCL
 Name:		ucl-common
 %define	basever	1.2.14
 Version:	1.2.16
-Release:	2
+Release:	3
 License:	custom
 Group:		Libraries
 Source0:	http://www-mice.cs.ucl.ac.uk/multimedia/software/common/common-%{basever}.tar.gz

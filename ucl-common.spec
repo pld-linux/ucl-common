@@ -6,7 +6,7 @@ Summary(pl):	Biblioteka wspólnego kodu UCL
 Name:		ucl-common
 Version:	1.2.0
 Release:	1
-License:	Custom
+License:	custom
 Group:		Libraries
 Source0:	http://www-mice.cs.ucl.ac.uk/multimedia/software/common/common-%{version}.tar.gz
 Patch0:		%{name}-time_h.patch

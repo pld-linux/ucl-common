@@ -8,7 +8,7 @@ Summary(pl):	Biblioteka wspólnego kodu UCL
 Name:		ucl-common
 %define	basever	1.2.14
 Version:	1.2.16
-Release:	1
+Release:	2
 License:	custom
 Group:		Libraries
 Source0:	http://www-mice.cs.ucl.ac.uk/multimedia/software/common/common-%{basever}.tar.gz
@@ -17,6 +17,7 @@ Source0:	http://www-mice.cs.ucl.ac.uk/multimedia/software/common/common-%{baseve
 Patch0:		%{name}-%{version}.patch
 Patch1:		%{name}-shared.patch
 Patch2:		%{name}-acfix.patch
+Patch3:		%{name}-types.patch
 URL:		http://www-mice.cs.ucl.ac.uk/multimedia/software/
 BuildRequires:	autoconf
 BuildRequires:	automake
@@ -67,6 +68,7 @@ Statyczna biblioteka wspólnego kodu UCL.
 %patch0 -p1
 %patch1 -p1
 %patch2 -p1
+%patch3 -p1
 
 %build
 cp -f /usr/share/automake/config.* .

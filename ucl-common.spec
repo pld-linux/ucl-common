@@ -1,6 +1,6 @@
 
 # NOTE that rat.spec also contains ucl-common - sometimes older,
-# sometimes newet than this spec
+# sometimes newer than this spec
 
 Summary:	UCL Common Code Library
 Summary(pl):	Biblioteka wspólnego kodu UCL
@@ -38,7 +38,7 @@ celów.
 Summary:	Header files for UCL Common Code Library
 Summary(pl):	Pliki nag³ówkowe do biblioteki wspólnego kodu UCL
 Group:		Development/Libraries
-Requires:	%{name} = %{version}
+Requires:	%{name} = %{version}-%{release}
 
 %description devel
 Header files for UCL Common Code Library.
@@ -50,7 +50,7 @@ Pliki nag³ówkowe biblioteki wspólnego kodu UCL.
 Summary:	UCL Common Code static library
 Summary(pl):	Statyczna biblioteka wspólnego kodu UCL
 Group:		Development/Libraries
-Requires:	%{name}-devel = %{version}
+Requires:	%{name}-devel = %{version}-%{release}
 
 %description static
 UCL Common Code static library.

@@ -4,7 +4,7 @@
 #       when updating rat
 #
 Summary:	UCL Common Code Library
-Summary(pl):	Biblioteka wspólnego kodu UCL
+Summary(pl.UTF-8):   Biblioteka wspÃ³lnego kodu UCL
 Name:		ucl-common
 %define	basever	1.2.14
 Version:	1.2.16
@@ -33,35 +33,35 @@ originates from work on the RAT project: these are portions that are
 not directly related to an audio tool and potentially useful
 elsewhere.
 
-%description -l pl
-Procedury u¿ywane przez kilka narzêdzi multimedialnych. Biblioteka ta
-wywodzi siê z prac nad projektem RAT, ale jej czê¶ci nie s± zwi±zane
-wy³±cznie z narzêdziami do d¼wiêku i mog± byæ przydatne do innych
-celów.
+%description -l pl.UTF-8
+Procedury uÅ¼ywane przez kilka narzÄ™dzi multimedialnych. Biblioteka ta
+wywodzi siÄ™ z prac nad projektem RAT, ale jej czÄ™Å›ci nie sÄ… zwiÄ…zane
+wyÅ‚Ä…cznie z narzÄ™dziami do dÅºwiÄ™ku i mogÄ… byÄ‡ przydatne do innych
+celÃ³w.
 
 %package devel
 Summary:	Header files for UCL Common Code Library
-Summary(pl):	Pliki nag³ówkowe do biblioteki wspólnego kodu UCL
+Summary(pl.UTF-8):   Pliki nagÅ‚Ã³wkowe do biblioteki wspÃ³lnego kodu UCL
 Group:		Development/Libraries
 Requires:	%{name} = %{version}-%{release}
 
 %description devel
 Header files for UCL Common Code Library.
 
-%description devel -l pl
-Pliki nag³ówkowe biblioteki wspólnego kodu UCL.
+%description devel -l pl.UTF-8
+Pliki nagÅ‚Ã³wkowe biblioteki wspÃ³lnego kodu UCL.
 
 %package static
 Summary:	UCL Common Code static library
-Summary(pl):	Statyczna biblioteka wspólnego kodu UCL
+Summary(pl.UTF-8):   Statyczna biblioteka wspÃ³lnego kodu UCL
 Group:		Development/Libraries
 Requires:	%{name}-devel = %{version}-%{release}
 
 %description static
 UCL Common Code static library.
 
-%description static -l pl
-Statyczna biblioteka wspólnego kodu UCL.
+%description static -l pl.UTF-8
+Statyczna biblioteka wspÃ³lnego kodu UCL.
 
 %prep
 %setup -qn common-%{basever}

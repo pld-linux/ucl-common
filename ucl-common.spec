@@ -4,7 +4,7 @@
 #       when updating rat
 #
 Summary:	UCL Common Code Library
-Summary(pl.UTF-8):   Biblioteka wspólnego kodu UCL
+Summary(pl.UTF-8):	Biblioteka wspólnego kodu UCL
 Name:		ucl-common
 %define	basever	1.2.14
 Version:	1.2.16
@@ -41,7 +41,7 @@ celów.
 
 %package devel
 Summary:	Header files for UCL Common Code Library
-Summary(pl.UTF-8):   Pliki nagłówkowe do biblioteki wspólnego kodu UCL
+Summary(pl.UTF-8):	Pliki nagłówkowe do biblioteki wspólnego kodu UCL
 Group:		Development/Libraries
 Requires:	%{name} = %{version}-%{release}
 
@@ -53,7 +53,7 @@ Pliki nagłówkowe biblioteki wspólnego kodu UCL.
 
 %package static
 Summary:	UCL Common Code static library
-Summary(pl.UTF-8):   Statyczna biblioteka wspólnego kodu UCL
+Summary(pl.UTF-8):	Statyczna biblioteka wspólnego kodu UCL
 Group:		Development/Libraries
 Requires:	%{name}-devel = %{version}-%{release}
 
